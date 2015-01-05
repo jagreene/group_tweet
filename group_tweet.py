@@ -1,4 +1,4 @@
-import pandas
+import time
 import csv
 import os.path
 from cmd2 import Cmd
@@ -10,7 +10,7 @@ class Tweeter(object):
     """Utility class built for Cheryl Greene, sends tweets to a list of people"""
     def __init__(self):
         super(Tweeter, self).__init__()
-        self.delay = 30000
+        self.delay = 5
         self.replaced = "[replace]"
         self.groups = {}
         self.APP_KEY = "OChCFw3S4DI2a5K5rMJddYuRl"
@@ -21,57 +21,75 @@ class Tweeter(object):
         self.OAUTH_TOKEN_SECRET = auth['oauth_token_secret']
         self.auth_url = auth['auth_url']
 
-        try:
-            if os.path.exists('oauth.csv'):
-                oauth_df = pandas.read_csv('oauth.csv')
-                with open('oauth.csv','wb') as f:
-                    w = csv.writer(f)
-                    w.writerows(oauth_df.items())
-                self.authd = True
-            else:
-                self.authd = False
-        except:
+        # try:
+        if os.path.exists('oauth.csv'):
+            oauth_dict = dict(csv.reader(open('oauth.csv','r')))
+            self.OAUTH_TOKEN = oauth_dict["OAUTH_TOKEN"]
+            self.OAUTH_TOKEN_SECRET = oauth_dict["OAUTH_TOKEN_SECRET"]
+            self.twitter = Twython(self.APP_KEY, self.APP_SECRET, self.OAUTH_TOKEN, self.OAUTH_TOKEN_SECRET)
+            self.twitter.verify_credentials()
+            self.authd = True
+            print("Authorized")
+        else:
+            print("Not already authorized")
             self.authd = False
+        # except:
+        #     print("Not already authorized")
+        #     self.authd = False
 
 
     def auth_self(self):
-        try:
-            pin = raw_input("Please go to "+self.auth_url+" and after authentication type in your pin code")
-            twitter = Twython(self.APP_KEY, self.APP_SECRET, self.OAUTH_TOKEN, self.OAUTH_TOKEN_SECRET)
+        if not self.authd:
+            try:
+                pin = raw_input("Please go to "+self.auth_url+" and after authentication type in your pin code: ")
+                print("")
+                self.twitter = Twython(self.APP_KEY, self.APP_SECRET, self.OAUTH_TOKEN, self.OAUTH_TOKEN_SECRET)
 
-            final_step = twitter.get_authorized_tokens(pin)
-            oauth_dict = {self.OAUTH_TOKEN: final_step['oauth_token'],
-                          self.OAUTH_TOKEN_SECRET: final_step['oauth_token_secret']
-            }
+                final_step = self.twitter.get_authorized_tokens(pin)
+                oauth_dict = {"OAUTH_TOKEN": final_step['oauth_token'],
+                              "OAUTH_TOKEN_SECRET": final_step['oauth_token_secret'],
+                              "PIN": pin
+                }
 
-            with open('oauth.csv','wb') as f:
-                w = csv.writer(f)
-                w.writerows(oauth_dict.items())
+                with open('oauth.csv', 'wb') as f:
+                    w = csv.writer(f)
+                    # print oauth_dict
+                    w.writerows(oauth_dict.items())
+                    f.close()
 
-            self.authd = True
-        except:
-            self.authd = False
-            print("Authentication failed")
+                self.authd = True
+            except:
+                self.authd = False
+                print("Authentication failed")
+        else:
+            print("Already authorized")
 
     def load_group(self):
-        group_file = raw_input("What is the file path to your csv file")
-        group_name = raw_input("What is the name of your group")
-        self.groups[group_name] = pandas.read_csv(group_file)
+        group_file = raw_input("What is the file path to your csv file: ")
+        print("")
+        group_name = raw_input("What is the name of your group: ")
+        self.groups[group_name] = list(csv.reader(open(group_file, 'r')))
 
     def check_groups(self):
         print(self.groups)
 
     def set_tweet(self):
-        tweet = raw_input("Type the tweet you would like to send. Type [replace] where you'd like the handle to go")
+        tweet = raw_input("Type the tweet you would like to send. Type [replace] where you'd like the handle to go: ")
         self.tweet = tweet
 
     def send_tweet(self):
         if self.authd:
-            for group in self.groups:
-                for handle in group:
-                    mod_text = self.tweet.replace(handle, self.replaced)
-                    print(mod_text)
-                    self.twitter.update_status(status=mod_text)
+            if self.tweet != None:
+                for group in self.groups:
+                    for handle in self.groups[group]:
+                        mod_text = self.tweet.replace(self.replaced, handle[0])
+                        print(mod_text)
+                        self.twitter.update_status(status=mod_text)
+                        time.sleep(self.delay)
+            else:
+                print("You need to set a tweet first")
+        else:
+            print("You are not authorized, run auth_self")
 
 class Interface(Cmd):
     def preloop(self):
@@ -81,7 +99,7 @@ class Interface(Cmd):
         print("Next load each group from file")
         print("Next set your tweet")
         print("Lastly send your tweet")
-        
+
         self.tweeter = Tweeter()
         self.completekey ='tab'
 
@@ -97,7 +115,7 @@ class Interface(Cmd):
     def do_set_tweet(self, input):
         self.tweeter.set_tweet()
 
-    def send_tweet(self, input):
+    def do_send_tweet(self, input):
         self.tweeter.send_tweet()
 
 if __name__ == "__main__":
