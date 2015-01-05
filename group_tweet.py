@@ -10,7 +10,7 @@ class Tweeter(object):
     """Utility class built for Cheryl Greene, sends tweets to a list of people"""
     def __init__(self):
         super(Tweeter, self).__init__()
-        self.delay = 5
+        self.delay = 60
         self.replaced = "[replace]"
         self.groups = {}
         self.APP_KEY = "OChCFw3S4DI2a5K5rMJddYuRl"
