@@ -10,7 +10,7 @@ class Tweeter(object):
     """Utility class built for Cheryl Greene, sends tweets to a list of people"""
     def __init__(self):
         super(Tweeter, self).__init__()
-        self.delay = 60
+        self.tweets = []
         self.replaced = "[replace]"
         self.groups = {}
         self.APP_KEY = "OChCFw3S4DI2a5K5rMJddYuRl"
@@ -73,19 +73,23 @@ class Tweeter(object):
     def check_groups(self):
         print(self.groups)
 
+    def check_tweets(self):
+        print(self.tweets)
+
     def set_tweet(self):
         tweet = raw_input("Type the tweet you would like to send. Type [replace] where you'd like the handle to go: ")
-        self.tweet = tweet
+        self.tweets.append(tweet)
 
     def send_tweet(self):
         if self.authd:
-            if self.tweet != None:
+            if len(self.tweets) >  0:
                 for group in self.groups:
                     for handle in self.groups[group]:
-                        mod_text = self.tweet.replace(self.replaced, handle[0])
+                        tweet = random.choice(self.tweets)
+                        mod_text = tweet.replace(self.replaced, handle[0])
                         print(mod_text)
                         self.twitter.update_status(status=mod_text)
-                        time.sleep(self.delay)
+                        time.sleep(random.randrange(1800, 3600)
             else:
                 print("You need to set a tweet first")
         else:
@@ -114,6 +118,9 @@ class Interface(Cmd):
 
     def do_set_tweet(self, input):
         self.tweeter.set_tweet()
+
+    def do_check_tweets(self, input):
+        self.tweeter.check_tweets
 
     def do_send_tweet(self, input):
         self.tweeter.send_tweet()
