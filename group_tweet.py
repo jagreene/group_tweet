@@ -89,7 +89,7 @@ class Tweeter(object):
                         mod_text = tweet.replace(self.replaced, handle[0])
                         print(mod_text)
                         self.twitter.update_status(status=mod_text)
-                        time.sleep(random.randrange(1800, 3600)
+                        time.sleep(random.randrange(1800, 3600))
             else:
                 print("You need to set a tweet first")
         else:
