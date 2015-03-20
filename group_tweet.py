@@ -1,6 +1,7 @@
 import time
 import csv
 import os.path
+import random
 from cmd2 import Cmd
 from twython import Twython
 
