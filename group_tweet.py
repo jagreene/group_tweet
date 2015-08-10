@@ -1,6 +1,7 @@
 import time
 import csv
 import os.path
+import os
 from cmd2 import Cmd
 from twython import Twython
 
@@ -13,8 +14,8 @@ class Tweeter(object):
         self.tweets = []
         self.replaced = "[replace]"
         self.groups = {}
-        self.APP_KEY = "OChCFw3S4DI2a5K5rMJddYuRl"
-        self.APP_SECRET = "4zHhjozNQpugIJhMYwYvLKGAfUOAWy2dyTp9epmbn58dMMscYz"
+        self.APP_KEY = os.environ['TWITTER_APP_KEY']
+        self.APP_SECRET = os.environ['TWITTER_APP_SECRET']
         self.twitter = Twython(self.APP_KEY, self.APP_SECRET)
         auth = self.twitter.get_authentication_tokens()
         self.OAUTH_TOKEN = auth['oauth_token']
